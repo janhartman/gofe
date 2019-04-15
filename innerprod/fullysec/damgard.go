@@ -18,7 +18,9 @@ package fullysec
 
 import (
 	"fmt"
+	"github.com/fentec-project/gofe"
 	"math/big"
+	"time"
 
 	"github.com/fentec-project/gofe/data"
 	"github.com/fentec-project/gofe/internal"
@@ -60,6 +62,7 @@ type Damgard struct {
 // configured, or if precondition l * bound² is >= order of the cyclic
 // group.
 func NewDamgard(l, modulusLength int, bound *big.Int) (*Damgard, error) {
+	defer gofe.TrackTime(time.Now(), "Damgard_Init")
 	key, err := keygen.NewElGamal(modulusLength)
 	if err != nil {
 		return nil, err
@@ -126,6 +129,7 @@ type DamgardSecKey struct {
 // public key for the scheme. It returns an error in case master keys
 // could not be generated.
 func (d *Damgard) GenerateMasterKeys() (*DamgardSecKey, data.Vector, error) {
+	defer gofe.TrackTime(time.Now(), "Damgard_KeyGen")
 	// both part of masterSecretKey
 	mskS := make(data.Vector, d.Params.l)
 	mskT := make(data.Vector, d.Params.l)
@@ -165,6 +169,7 @@ type DamgardDerivedKey struct {
 // functional encryption key. In case the key could not be derived, it
 // returns an error.
 func (d *Damgard) DeriveKey(masterSecKey *DamgardSecKey, y data.Vector) (*DamgardDerivedKey, error) {
+	defer gofe.TrackTime(time.Now(), "Damgard_KeyDerive")
 	if err := y.CheckBound(d.Params.bound); err != nil {
 		return nil, err
 	}
@@ -188,6 +193,7 @@ func (d *Damgard) DeriveKey(masterSecKey *DamgardSecKey, y data.Vector) (*Damgar
 // Encrypt encrypts input vector x with the provided master public key.
 // It returns a ciphertext vector. If encryption failed, error is returned.
 func (d *Damgard) Encrypt(x, masterPubKey data.Vector) (data.Vector, error) {
+	defer gofe.TrackTime(time.Now(), "Damgard_Encrypt")
 	if err := x.CheckBound(d.Params.bound); err != nil {
 		return nil, err
 	}
@@ -221,6 +227,7 @@ func (d *Damgard) Encrypt(x, masterPubKey data.Vector) (data.Vector, error) {
 // a plaintext vector y. It returns the inner product of x and y.
 // If decryption failed, error is returned.
 func (d *Damgard) Decrypt(cipher data.Vector, key *DamgardDerivedKey, y data.Vector) (*big.Int, error) {
+	defer gofe.TrackTime(time.Now(), "Damgard_Decrypt")
 	if err := y.CheckBound(d.Params.bound); err != nil {
 		return nil, err
 	}

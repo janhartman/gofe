@@ -17,7 +17,9 @@
 package quadratic
 
 import (
+	"github.com/fentec-project/gofe"
 	"math/big"
+	"time"
 
 	"github.com/fentec-project/bn256"
 	"github.com/fentec-project/gofe/data"
@@ -56,6 +58,7 @@ type SGP struct {
 // for coordinates of input vectors x, y, and the function
 // matrix F.
 func NewSGP(n int, b *big.Int) *SGP {
+	defer gofe.TrackTime(time.Now(), "SGP_Init")
 	return &SGP{
 		N:        n,
 		mod:      bn256.Order,
@@ -85,6 +88,7 @@ func NewSGPSecKey(s, t data.Vector) *SGPSecKey {
 // SGP scheme. It returns an error if the secret key could
 // not be generated.
 func (q *SGP) GenerateMasterKey() (*SGPSecKey, error) {
+	defer gofe.TrackTime(time.Now(), "SGP_KeyGen")
 	// msk is random s, t from Z_p^n
 	sampler := sample.NewUniform(q.mod)
 	s, err := data.NewRandomVector(q.N, sampler)
@@ -121,6 +125,7 @@ func NewSGPCipher(g1MulGamma *bn256.G1, aMulG1 []data.VectorG1,
 // master secret key msk. It returns the appropriate ciphertext.
 // If ciphertext could not be generated, it returns an error.
 func (q *SGP) Encrypt(x, y data.Vector, msk *SGPSecKey) (*SGPCipher, error) {
+	defer gofe.TrackTime(time.Now(), "SGP_Encrypt")
 	sampler := sample.NewUniform(q.mod)
 	gamma, err := sampler.Sample()
 	if err != nil {
@@ -175,6 +180,7 @@ func (q *SGP) Encrypt(x, y data.Vector, msk *SGPSecKey) (*SGPCipher, error) {
 // DeriveKey derives the functional encryption key for the scheme.
 // It returns an error if the key could not be derived.
 func (q *SGP) DeriveKey(msk *SGPSecKey, F data.Matrix) (*bn256.G2, error) {
+	defer gofe.TrackTime(time.Now(), "SGP_KeyDerive")
 	// F is matrix and represents function (x, y) -> Σ f_i,j * x_i * y_i.
 	// Functional encryption key is g2 * f(s, t).
 	v, err := F.MulXMatY(msk.S, msk.T)
@@ -195,6 +201,7 @@ func (q *SGP) DeriveKey(msk *SGPSecKey, F data.Matrix) (*bn256.G2, error) {
 // Decrypt decrypts the ciphertext c with the derived functional
 // encryption key key in order to obtain function x^T * F * y.
 func (q *SGP) Decrypt(c *SGPCipher, key *bn256.G2, F data.Matrix) (*big.Int, error) {
+	defer gofe.TrackTime(time.Now(), "SGP_Decrypt")
 	prod := bn256.Pair(c.G1MulGamma, key)
 	zero := big.NewInt(0)
 

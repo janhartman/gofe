@@ -18,7 +18,9 @@ package fullysec
 
 import (
 	"fmt"
+	"github.com/fentec-project/gofe"
 	"math/big"
+	"time"
 
 	emmy "github.com/xlab-si/emmy/crypto/common"
 
@@ -60,6 +62,7 @@ type Paillier struct {
 // configured, or if the precondition boundX, boundY < (n / l)^(1/2)
 // is not satisfied.
 func NewPaillier(l, lambda, bitLen int, boundX, boundY *big.Int) (*Paillier, error) {
+	defer gofe.TrackTime(time.Now(), "Paillier_Init")
 	// generate two safe primes
 	p, err := emmy.GetSafePrime(bitLen)
 	if err != nil {
@@ -145,6 +148,7 @@ func NewPaillierFromParams(params *paillerParams) *Paillier {
 // public key for the scheme. It returns an error in case master keys
 // could not be generated.
 func (s *Paillier) GenerateMasterKeys() (data.Vector, data.Vector, error) {
+	defer gofe.TrackTime(time.Now(), "Paillier_KeyGen")
 	// sampler for sampling a secret key
 	sampler, err := sample.NewNormalDouble(s.Params.sigma, uint(s.Params.lambda),
 		big.NewFloat(1))
@@ -169,6 +173,7 @@ func (s *Paillier) GenerateMasterKeys() (data.Vector, data.Vector, error) {
 // In case of malformed secret key or input vector that violates the configured
 // bound, it returns an error.
 func (s *Paillier) DeriveKey(masterSecKey data.Vector, y data.Vector) (*big.Int, error) {
+	defer gofe.TrackTime(time.Now(), "Paillier_KeyDerive")
 	if err := y.CheckBound(s.Params.boundY); err != nil {
 		return nil, err
 	}
@@ -179,6 +184,7 @@ func (s *Paillier) DeriveKey(masterSecKey data.Vector, y data.Vector) (*big.Int,
 // Encrypt encrypts input vector x with the provided master public key.
 // It returns a ciphertext vector. If encryption failed, error is returned.
 func (s *Paillier) Encrypt(x, masterPubKey data.Vector) (data.Vector, error) {
+	defer gofe.TrackTime(time.Now(), "Paillier_Encrypt")
 	if err := x.CheckBound(s.Params.boundX); err != nil {
 		return nil, err
 	}
@@ -211,6 +217,7 @@ func (s *Paillier) Encrypt(x, masterPubKey data.Vector) (data.Vector, error) {
 // Decrypt accepts the encrypted vector, functional encryption key, and
 // a vector y. It returns the inner product of x and y.
 func (s *Paillier) Decrypt(cipher data.Vector, key *big.Int, y data.Vector) (*big.Int, error) {
+	defer gofe.TrackTime(time.Now(), "Paillier_Decrypt")
 	if err := y.CheckBound(s.Params.boundY); err != nil {
 		return nil, err
 	}

@@ -18,7 +18,9 @@ package simple
 
 import (
 	"fmt"
+	"github.com/fentec-project/gofe"
 	"math/big"
+	"time"
 
 	"github.com/fentec-project/gofe/data"
 	"github.com/fentec-project/gofe/internal"
@@ -58,6 +60,7 @@ type DDH struct {
 // configured, or if precondition l * bound² is >= order of the cyclic
 // group.
 func NewDDH(l, modulusLength int, bound *big.Int) (*DDH, error) {
+	defer gofe.TrackTime(time.Now(), "DDH_Init")
 	key, err := keygen.NewElGamal(modulusLength)
 	if err != nil {
 		return nil, err
@@ -93,6 +96,7 @@ func NewDDHFromParams(params *ddhParams) *DDH {
 // public key for the scheme. It returns an error in case master keys
 // could not be generated.
 func (d *DDH) GenerateMasterKeys() (data.Vector, data.Vector, error) {
+	defer gofe.TrackTime(time.Now(), "DDH_KeyGen")
 	masterSecKey := make(data.Vector, d.Params.l)
 	masterPubKey := make(data.Vector, d.Params.l)
 
@@ -113,6 +117,7 @@ func (d *DDH) GenerateMasterKeys() (data.Vector, data.Vector, error) {
 // functional encryption key. In case the key could not be derived, it
 // returns an error.
 func (d *DDH) DeriveKey(masterSecKey, y data.Vector) (*big.Int, error) {
+	defer gofe.TrackTime(time.Now(), "DDH_KeyDerive")
 	if err := y.CheckBound(d.Params.bound); err != nil {
 		return nil, err
 	}
@@ -127,6 +132,7 @@ func (d *DDH) DeriveKey(masterSecKey, y data.Vector) (*big.Int, error) {
 // Encrypt encrypts input vector x with the provided master public key.
 // It returns a ciphertext vector. If encryption failed, error is returned.
 func (d *DDH) Encrypt(x, masterPubKey data.Vector) (data.Vector, error) {
+	defer gofe.TrackTime(time.Now(), "DDH_Encrypt")
 	if err := x.CheckBound(d.Params.bound); err != nil {
 		return nil, err
 	}
@@ -157,6 +163,7 @@ func (d *DDH) Encrypt(x, masterPubKey data.Vector) (data.Vector, error) {
 // a plaintext vector y. It returns the inner product of x and y.
 // If decryption failed, error is returned.
 func (d *DDH) Decrypt(cipher data.Vector, key *big.Int, y data.Vector) (*big.Int, error) {
+	defer gofe.TrackTime(time.Now(), "DDH_Decrypt")
 	if err := y.CheckBound(d.Params.bound); err != nil {
 		return nil, err
 	}

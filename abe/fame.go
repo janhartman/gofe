@@ -17,7 +17,9 @@
 package abe
 
 import (
+	"github.com/fentec-project/gofe"
 	"math/big"
+	"time"
 
 	"fmt"
 	"strconv"
@@ -47,6 +49,7 @@ type FAME struct {
 
 // NewFAME configures a new instance of the scheme.
 func NewFAME() *FAME {
+	defer gofe.TrackTime(time.Now(), "FAME_Init")
 	return &FAME{P: bn256.Order}
 }
 
@@ -66,6 +69,7 @@ type FAMEPubKey struct {
 // for encrypting data, and master secret keys needed for generating
 // keys for decrypting.
 func (a *FAME) GenerateMasterKeys() (*FAMEPubKey, *FAMESecKey, error) {
+	defer gofe.TrackTime(time.Now(), "FAME_KeyGen")
 	sampler := sample.NewUniformRange(big.NewInt(1), a.P)
 	val, err := data.NewRandomVector(7, sampler)
 	if err != nil {
@@ -101,6 +105,7 @@ type FAMECipher struct {
 // is returned. Note that safety of the encryption is only proved if the mapping
 // msp.RowToAttrib from the rows of msp.Mat to attributes is injective.
 func (a *FAME) Encrypt(msg string, msp *MSP, pk *FAMEPubKey) (*FAMECipher, error) {
+	defer gofe.TrackTime(time.Now(), "FAME_Encrypt")
 	msgInGt, err := bn256.MapStringToGT(msg)
 	if err != nil {
 		return nil, err
@@ -192,6 +197,7 @@ type FAMEAttribKeys struct {
 // generates keys that can be used for the decryption of any ciphertext encoded
 // with a policy for which attributes gamma are sufficient.
 func (a *FAME) GenerateAttribKeys(gamma []int, sk *FAMESecKey) (*FAMEAttribKeys, error) {
+	defer gofe.TrackTime(time.Now(), "FAME_KeyDerive")
 	sampler := sample.NewUniform(a.P)
 	r, err := data.NewRandomVector(2, sampler)
 	if err != nil {
@@ -294,6 +300,7 @@ func (a *FAME) GenerateAttribKeys(gamma []int, sk *FAMESecKey) (*FAMEAttribKeys,
 // corresponding keys FAMEAttribKeys) suffices the encryption policy of the
 // cipher. If this is not possible, an error is returned.
 func (a *FAME) Decrypt(cipher *FAMECipher, key *FAMEAttribKeys, pk *FAMEPubKey) (string, error) {
+	defer gofe.TrackTime(time.Now(), "FAME_Decrypt")
 	// find out which attributes are owned
 	attribMap := make(map[int]bool)
 	for k := range key.attribToI {

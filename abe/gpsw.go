@@ -18,7 +18,9 @@ package abe
 
 import (
 	"fmt"
+	"github.com/fentec-project/gofe"
 	"math/big"
+	"time"
 
 	"github.com/fentec-project/bn256"
 	"github.com/fentec-project/gofe/data"
@@ -56,6 +58,7 @@ type GPSW struct {
 // the scheme. Attributes' names will be considered as
 // elements of a set {0, 1,..., l-1}.
 func NewGPSW(l int) *GPSW {
+	defer gofe.TrackTime(time.Now(), "GPSW_Init")
 	return &GPSW{Params: &GPSWParams{
 		L: l,           // number of attributes in the whole universe
 		P: bn256.Order, // the order of the pairing groups
@@ -72,6 +75,7 @@ type GPSWPubKey struct {
 // for encrypting data, and secret keys needed for generating keys
 // for decryption.
 func (a *GPSW) GenerateMasterKeys() (*GPSWPubKey, data.Vector, error) {
+	defer gofe.TrackTime(time.Now(), "GPSW_KeyGen")
 	sampler := sample.NewUniform(a.Params.P)
 	sk, err := data.NewRandomVector(a.Params.L+1, sampler)
 	if err != nil {
@@ -96,6 +100,7 @@ type GPSWCipher struct {
 // key pk. It returns an encryption of msk. In case of a failed procedure an
 // error is returned.
 func (a *GPSW) Encrypt(msg string, gamma []int, pk *GPSWPubKey) (*GPSWCipher, error) {
+	defer gofe.TrackTime(time.Now(), "GPSW_Encrypt")
 	msgInGt, err := bn256.MapStringToGT(msg)
 	if err != nil {
 		return nil, err
@@ -127,6 +132,7 @@ func (a *GPSW) Encrypt(msg string, gamma []int, pk *GPSWPubKey) (*GPSWCipher, er
 // each row of msp.mat has a corresponding key, this keys can be latter delegated
 // to entities with corresponding attributes.
 func (a *GPSW) GeneratePolicyKeys(msp *MSP, sk data.Vector) (data.VectorG1, error) {
+	defer gofe.TrackTime(time.Now(), "GPSW_KeyDerive1")
 	if len(msp.Mat) == 0 || len(msp.Mat[0]) == 0 {
 		return nil, fmt.Errorf("empty msp matrix")
 	}
@@ -191,6 +197,7 @@ type GPSWKey struct {
 // those that correspond to attributes appearing in attrib and creates an GPSWKey
 // for the decryption.
 func (a *GPSW) DelegateKeys(keys data.VectorG1, msp *MSP, attrib []int) *GPSWKey {
+	defer gofe.TrackTime(time.Now(), "GPSW_KeyDerive2")
 	attribMap := make(map[int]bool)
 	for _, e := range attrib {
 		attribMap[e] = true
@@ -226,6 +233,7 @@ func (a *GPSW) DelegateKeys(keys data.VectorG1, msp *MSP, attrib []int) *GPSWKey
 // if the rows of the matrix in the key span the vector [1, 1,..., 1]. If this
 // is not possible, an error is returned.
 func (a *GPSW) Decrypt(cipher *GPSWCipher, key *GPSWKey) (string, error) {
+	defer gofe.TrackTime(time.Now(), "GPSW_Decrypt")
 	// get a combination alpha of keys needed to decrypt
 	ones := data.NewConstantVector(len(key.mat[0]), big.NewInt(1))
 	alpha, err := gaussianElimination(key.mat.Transpose(), ones, a.Params.P)

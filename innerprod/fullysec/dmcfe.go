@@ -18,7 +18,9 @@ package fullysec
 
 import (
 	"fmt"
+	"github.com/fentec-project/gofe"
 	"math/big"
+	"time"
 
 	"github.com/fentec-project/bn256"
 	"github.com/fentec-project/gofe/data"
@@ -44,6 +46,7 @@ type DMCFEClient struct {
 // y is publicly known vector y = (y_1,...,y_l). Value idx presents index of the party, where
 // it is assumed that if there are n clients, its indexes are in [0, n-1]
 func NewDMCFEClient(idx int) (*DMCFEClient, error) {
+	defer gofe.TrackTime(time.Now(), "DMCFE_Init")
 	sampler := sample.NewUniform(bn256.Order)
 	s, err := data.NewRandomVector(2, sampler)
 	if err != nil {
@@ -106,6 +109,7 @@ func (c *DMCFEClient) SetT(pubT []data.Matrix) error {
 
 // Encrypt encrypts number x under some label.
 func (c *DMCFEClient) Encrypt(x *big.Int, label string) (*bn256.G1, error) {
+	defer gofe.TrackTime(time.Now(), "DMCFE_Encrypt")
 	u := hash([]byte(label))
 	ct, err := u.Dot(c.s)
 	if err != nil {
@@ -119,6 +123,7 @@ func (c *DMCFEClient) Encrypt(x *big.Int, label string) (*bn256.G1, error) {
 
 // GenerateKeyShare generates client's key share. Decryptor needs shares from all clients.
 func (c *DMCFEClient) GenerateKeyShare(y data.Vector) (data.VectorG2, error) {
+	defer gofe.TrackTime(time.Now(), "DMCFE_KeyGen")
 	yReprCap := 0
 	for _, yi := range y {
 		yReprCap += len(yi.Bytes())
@@ -169,7 +174,8 @@ func NewDMCFEDecryptor(y data.Vector, label string, ciphers []*bn256.G1, keyShar
 	bound *big.Int) *DMCFEDecryptor {
 	key1 := new(bn256.G2).ScalarBaseMult(big.NewInt(0))
 	key2 := new(bn256.G2).ScalarBaseMult(big.NewInt(0))
-	for i := 0; i < len(keyShares); i++ {
+	defer gofe.TrackTime(time.Now(), "DMCFE_Init2")
+	for i := 1; i < len(keyShares); i++ {
 		key1.Add(key1, keyShares[i][0])
 		key2.Add(key2, keyShares[i][1])
 	}
@@ -187,6 +193,7 @@ func NewDMCFEDecryptor(y data.Vector, label string, ciphers []*bn256.G1, keyShar
 }
 
 func (d *DMCFEDecryptor) Decrypt() (*big.Int, error) {
+	defer gofe.TrackTime(time.Now(), "DMCFE_Decrypt")
 	gen := new(bn256.G2).ScalarBaseMult(big.NewInt(1))
 	cSum := new(bn256.G1).ScalarBaseMult(big.NewInt(0))
 	cAdd := new(bn256.G1)

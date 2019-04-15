@@ -18,6 +18,7 @@ package fullysec
 
 import (
 	"math/big"
+	"time"
 
 	"math"
 
@@ -25,6 +26,7 @@ import (
 
 	"github.com/fentec-project/gofe/data"
 	gofe "github.com/fentec-project/gofe/internal"
+	gof "github.com/fentec-project/gofe"
 	"github.com/fentec-project/gofe/sample"
 	"github.com/pkg/errors"
 )
@@ -76,6 +78,7 @@ type LWE struct {
 // It returns an error in case public parameters of the scheme could
 // not be generated.
 func NewLWE(l, n int, boundX, boundY *big.Int) (*LWE, error) {
+	defer gof.TrackTime(time.Now(), "LWEFS_Init")
 
 	// K = 2 * l * boundX * boundY
 	K := new(big.Int).Mul(boundX, boundY)
@@ -195,6 +198,7 @@ func NewLWE(l, n int, boundX, boundY *big.Int) (*LWE, error) {
 //
 // In case secret key could not be generated, it returns an error.
 func (s *LWE) GenerateSecretKey() (data.Matrix, error) {
+	defer gof.TrackTime(time.Now(), "LWEFS_KeyGen1")
 	var val *big.Int
 
 	sampler1, err := sample.NewNormalDouble(s.params.sigma1, uint(s.params.n), big.NewFloat(1))
@@ -232,6 +236,7 @@ func (s *LWE) GenerateSecretKey() (data.Matrix, error) {
 // Public key is a matrix of l*m elements.
 // In case of a malformed secret key the function returns an error.
 func (s *LWE) GeneratePublicKey(Z data.Matrix) (data.Matrix, error) {
+	defer gof.TrackTime(time.Now(), "LWEFS_KeyGen2")
 	if !Z.CheckDims(s.params.l, s.params.m) {
 		return nil, gofe.MalformedSecKey
 	}
@@ -247,6 +252,7 @@ func (s *LWE) GeneratePublicKey(Z data.Matrix) (data.Matrix, error) {
 // In case of malformed secret key or input vector that violates the
 // configured bound, it returns an error.
 func (s *LWE) DeriveKey(y data.Vector, Z data.Matrix) (data.Vector, error) {
+	defer gof.TrackTime(time.Now(), "LWEFS_KeyDerive")
 	if err := y.CheckBound(s.params.boundY); err != nil {
 		return nil, err
 	}
@@ -268,6 +274,7 @@ func (s *LWE) DeriveKey(y data.Vector, Z data.Matrix) (data.Vector, error) {
 // public key or input vector that violates the configured bound,
 // it returns an error.
 func (s *LWE) Encrypt(x data.Vector, U data.Matrix) (data.Vector, error) {
+	defer gof.TrackTime(time.Now(), "LWEFS_Encrypt")
 	if err := x.CheckBound(s.params.boundX); err != nil {
 		return nil, err
 	}
@@ -317,6 +324,7 @@ func (s *LWE) Encrypt(x data.Vector, U data.Matrix) (data.Vector, error) {
 // If decryption failed (for instance with input data that violates the
 // configured bound or malformed ciphertext or keys), error is returned.
 func (s *LWE) Decrypt(cipher, zY, y data.Vector) (*big.Int, error) {
+	defer gof.TrackTime(time.Now(), "LWEFS_Decrypt")
 	if err := y.CheckBound(s.params.boundY); err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 func GetParams() (int, int, int) {
@@ -48,4 +49,9 @@ func GetParams() (int, int, int) {
 		return 0, 0, 0
 	}
 
+}
+
+func TrackTime(start time.Time, name string) {
+	elapsed := time.Since(start)
+	fmt.Printf("go %s %.6f\n", name, elapsed.Seconds())
 }
