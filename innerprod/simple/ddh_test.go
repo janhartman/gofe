@@ -17,6 +17,7 @@
 package simple_test
 
 import (
+	"github.com/fentec-project/gofe"
 	"math/big"
 	"testing"
 
@@ -27,10 +28,10 @@ import (
 )
 
 func TestSimple_DDH(t *testing.T) {
-	l := 3
-	bound := new(big.Int).Exp(big.NewInt(2), big.NewInt(20), big.NewInt(0))
+	modulusLength, l, _b := gofe.GetParams()
+	bound := big.NewInt(int64(_b))
+
 	sampler := sample.NewUniformRange(new(big.Int).Neg(bound), bound)
-	modulusLength := 128
 
 	simpleDDH, err := simple.NewDDH(l, modulusLength, bound)
 

@@ -17,6 +17,7 @@
 package simple_test
 
 import (
+	"github.com/fentec-project/gofe"
 	"math/big"
 	"testing"
 
@@ -27,9 +28,9 @@ import (
 )
 
 func TestSimple_LWE(t *testing.T) {
-	l := 4
-	n := 128
-	b := big.NewInt(10000)
+
+	n, l,_b := gofe.GetParams()
+	b := big.NewInt(int64(_b))
 
 	x, y, xy := testVectorData(l, b, b)
 	emptyVec := data.Vector{}

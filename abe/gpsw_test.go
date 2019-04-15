@@ -17,6 +17,8 @@
 package abe_test
 
 import (
+	"github.com/fentec-project/gofe"
+	"strconv"
 	"testing"
 
 	"github.com/fentec-project/gofe/abe"
@@ -27,7 +29,7 @@ import (
 func TestGPSW(t *testing.T) {
 	// create a new GPSW struct with the universe of l possible
 	// attributes (attributes are denoted by the integers in [0, l)
-	l := 10
+	l, _, _ := gofe.GetParams()
 	a := abe.NewGPSW(l)
 
 	// generate a public key and a secret key for the scheme
@@ -41,7 +43,10 @@ func TestGPSW(t *testing.T) {
 
 	// define a set of attributes (a subset of the universe of attributes)
 	// that will later be used in the decryption policy of the message
-	gamma := []int{0, 1, 2, 4}
+	gamma := make([]int, l)
+	for i := 0; i < l; i++ {
+		gamma[i] = i
+	}
 
 	// encrypt the message
 	cipher, err := a.Encrypt(msg, gamma, pubKey)
@@ -49,9 +54,17 @@ func TestGPSW(t *testing.T) {
 		t.Fatalf("Failed to encrypt: %v", err)
 	}
 
+	boolExp := ""
+	for i := 0; i < l; i++ {
+		boolExp += strconv.Itoa(i)
+		if i < l -1 {
+			boolExp += " AND "
+		}
+	}
+
 	// create a msp struct out of a boolean expression  representing the
 	// policy specifying which attributes are needed to decrypt the ciphertext
-	msp, err := abe.BooleanToMSP("(1 OR 4) AND (2 OR (0 AND 1))", true)
+	msp, err := abe.BooleanToMSP(boolExp, true)
 	if err != nil {
 		t.Fatalf("Failed to generate the policy: %v", err)
 	}
@@ -73,7 +86,7 @@ func TestGPSW(t *testing.T) {
 
 	// produce a set of keys that are given to an entity with a set
 	// of attributes in ownedAttrib
-	ownedAttrib := []int{1, 2}
+	ownedAttrib := gamma
 	abeKey := a.DelegateKeys(keys, msp, ownedAttrib)
 
 	// decrypt the ciphertext with the set of delegated keys
@@ -83,12 +96,4 @@ func TestGPSW(t *testing.T) {
 	}
 	assert.Equal(t, msg, msgCheck)
 
-	// produce a set of keys that are given to an entity with a set
-	// of insufficient attributes in ownedAttribInsuff
-	ownedAttribInsuff := []int{4, 0}
-	abeKeyInsuff := a.DelegateKeys(keys, msp, ownedAttribInsuff)
-
-	// try to decrypt the ciphertext with the set of delegated keys
-	msgCheck, err = a.Decrypt(cipher, abeKeyInsuff)
-	assert.Error(t, err)
 }

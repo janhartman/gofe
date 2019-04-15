@@ -17,6 +17,7 @@
 package fullysec_test
 
 import (
+	"github.com/fentec-project/gofe"
 	"math/big"
 	"testing"
 
@@ -27,14 +28,15 @@ import (
 )
 
 func TestFullySec_Paillier(t *testing.T) {
-	l := 50
-	boundX := new(big.Int).Exp(big.NewInt(2), big.NewInt(64), nil)
-	boundY := new(big.Int).Exp(big.NewInt(2), big.NewInt(64), nil)
+	bitLength, l, b := gofe.GetParams()
+
+	lambda := bitLength / 4
+
+	boundX := big.NewInt(int64(b))
+	boundY := big.NewInt(int64(b))
 
 	samplerX := sample.NewUniformRange(new(big.Int).Neg(boundX), boundX)
 	samplerY := sample.NewUniformRange(new(big.Int).Neg(boundY), boundY)
-	bitLength := 512
-	lambda := 128
 
 	paillier, err := fullysec.NewPaillier(l, lambda, bitLength, boundX, boundY)
 	if err != nil {

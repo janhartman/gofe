@@ -17,6 +17,7 @@
 package fullysec_test
 
 import (
+	"github.com/fentec-project/gofe"
 	"math/big"
 	"testing"
 
@@ -29,7 +30,9 @@ import (
 )
 
 func Test_DMCFE(t *testing.T) {
-	numClients := 100
+	l, b, _ := gofe.GetParams()
+
+	numClients := l
 	clients := make([]*fullysec.DMCFEClient, numClients)
 
 	pubT := make([]data.Matrix, numClients)
@@ -55,7 +58,7 @@ func Test_DMCFE(t *testing.T) {
 	// a decentralized way and create partial keys such that only with all of them
 	// the decryption of the inner product is possible
 	label := "some label"
-	bound := big.NewInt(1000)
+	bound := big.NewInt(int64(b))
 	sampler1 := sample.NewUniform(bound)
 	y, err := data.NewRandomVector(numClients, sampler1)
 	if err != nil {

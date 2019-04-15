@@ -17,6 +17,8 @@
 package abe_test
 
 import (
+	"github.com/fentec-project/gofe"
+	"strconv"
 	"testing"
 
 	"github.com/fentec-project/gofe/abe"
@@ -24,6 +26,8 @@ import (
 )
 
 func TestFAME(t *testing.T) {
+	l, _, _ := gofe.GetParams()
+
 	// create a new FAME struct with the universe of attributes
 	// denoted by integer
 	a := abe.NewFAME()
@@ -37,6 +41,14 @@ func TestFAME(t *testing.T) {
 	// create a message to be encrypted
 	msg := "Attack at dawn!"
 
+	boolExp := ""
+	for i := 0; i < l; i++ {
+		boolExp += strconv.Itoa(i)
+		if i < l -1 {
+			boolExp += " AND "
+		}
+	}
+
 	// create a msp struct out of a boolean expression representing the
 	// policy specifying which attributes are needed to decrypt the ciphertext;
 	// note that safety of the encryption is only proved if the mapping
@@ -44,7 +56,7 @@ func TestFAME(t *testing.T) {
 	// only boolean expressions in which each attribute appears at most once
 	// are allowed - if expressions with multiple appearances of an attribute
 	// are needed, then this attribute can be split into more sub-attributes
-	msp, err := abe.BooleanToMSP("((0 AND 1) OR (2 AND 3)) AND 5", false)
+	msp, err := abe.BooleanToMSP(boolExp, false)
 	if err != nil {
 		t.Fatalf("Failed to generate the policy: %v", err)
 	}
@@ -58,7 +70,10 @@ func TestFAME(t *testing.T) {
 
 	// define a set of attributes (a subset of the universe of attributes)
 	// that an entity possesses
-	gamma := []int{0, 2, 3, 5}
+	gamma := make([]int, l)
+	for i := 0; i < l; i++ {
+		gamma[i] = i
+	}
 
 	// generate keys for decryption for an entity with
 	// attributes gamma
@@ -75,19 +90,4 @@ func TestFAME(t *testing.T) {
 	}
 	assert.Equal(t, msg, msgCheck)
 
-	// define a set of attributes (a subset of the universe of attributes)
-	// that an entity possesses
-	gammaInsuff := []int{1, 3, 5}
-
-	// generate keys for decryption for an entity with
-	// attributes gammaInsuff
-	keysInsuff, err := a.GenerateAttribKeys(gammaInsuff, secKey)
-	if err != nil {
-		t.Fatalf("Failed to generate keys: %v", err)
-	}
-
-	// try to decrypt the ciphertext with the keys of an entity
-	// that has insufficient attributes
-	_, err = a.Decrypt(cipher, keysInsuff, pubKey)
-	assert.Error(t, err)
 }

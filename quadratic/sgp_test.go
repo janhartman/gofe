@@ -17,6 +17,7 @@
 package quadratic_test
 
 import (
+	"github.com/fentec-project/gofe"
 	"math/big"
 	"testing"
 
@@ -27,9 +28,10 @@ import (
 )
 
 func TestSGP(t *testing.T) {
-	bound := big.NewInt(1000)
+	n, _b, _ := gofe.GetParams()
+
+	bound := big.NewInt(int64(_b))
 	sampler := sample.NewUniformRange(new(big.Int).Neg(bound), bound)
-	n := 2
 	f, err := data.NewRandomMatrix(n, n, sampler)
 	if err != nil {
 		t.Fatalf("error when generating random matrix: %v", err)

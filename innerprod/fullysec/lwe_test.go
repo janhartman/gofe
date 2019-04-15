@@ -17,6 +17,7 @@
 package fullysec_test
 
 import (
+	"github.com/fentec-project/gofe"
 	"math/big"
 	"testing"
 
@@ -27,10 +28,9 @@ import (
 )
 
 func TestFullySec_LWE(t *testing.T) {
-	l := 4
-	n := 64
-	boundX := big.NewInt(1000) // maximal size of the entry of the message
-	boundY := big.NewInt(1000) // maximal size of the entry of the other operand for inner product
+	n, l, _b := gofe.GetParams()
+	boundX := big.NewInt(int64(_b))
+	boundY := big.NewInt(int64(_b))
 
 	x, y, xy := testVectorData(l, boundX, boundY)
 	emptyVec := data.Vector{}
