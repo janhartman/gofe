@@ -33,8 +33,6 @@ func TestSimple_LWE(t *testing.T) {
 	b := big.NewInt(int64(_b))
 
 	x, y, xy := testVectorData(l, b, b)
-	emptyVec := data.Vector{}
-	emptyMat := data.Matrix{}
 
 	simpleLWE, err := simple.NewLWE(l, b, b, n)
 	assert.NoError(t, err)
@@ -42,31 +40,15 @@ func TestSimple_LWE(t *testing.T) {
 	SK, err := simpleLWE.GenerateSecretKey()
 	assert.NoError(t, err)
 
-	PK, err := simpleLWE.GeneratePublicKey(emptyMat)
-	assert.Error(t, err)
-	PK, err = simpleLWE.GeneratePublicKey(SK)
+	PK, err := simpleLWE.GeneratePublicKey(SK)
 	assert.NoError(t, err)
 
-	_, err = simpleLWE.DeriveKey(emptyVec, SK)
-	assert.Error(t, err)
-	_, err = simpleLWE.DeriveKey(y, emptyMat)
-	assert.Error(t, err)
 	skY, err := simpleLWE.DeriveKey(y, SK)
 	assert.NoError(t, err)
 
-	_, err = simpleLWE.Encrypt(emptyVec, PK)
-	assert.Error(t, err)
-	_, err = simpleLWE.Encrypt(x, emptyMat)
-	assert.Error(t, err)
 	cipher, err := simpleLWE.Encrypt(x, PK)
 	assert.NoError(t, err)
 
-	_, err = simpleLWE.Decrypt(emptyVec, skY, y)
-	assert.Error(t, err)
-	_, err = simpleLWE.Decrypt(cipher, emptyVec, y)
-	assert.Error(t, err)
-	_, err = simpleLWE.Decrypt(cipher, skY, emptyVec)
-	assert.Error(t, err)
 	xyDecrypted, err := simpleLWE.Decrypt(cipher, skY, y)
 	assert.NoError(t, err)
 	assert.Equal(t, xy.Cmp(xyDecrypted), 0, "obtained incorrect inner product")

@@ -90,7 +90,8 @@ func (v Vector) CheckBound(bound *big.Int) error {
 	abs := new(big.Int)
 	for _, c := range v {
 		abs.Abs(c)
-		if abs.Cmp(bound) > -1 {
+		if abs.Cmp(bound) > 0 {
+			fmt.Printf("Bound: %d, coordinate: %d", bound, c)
 			return fmt.Errorf("all coordinates of a vector should be smaller than bound")
 		}
 	}

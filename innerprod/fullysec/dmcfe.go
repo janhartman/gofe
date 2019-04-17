@@ -109,7 +109,6 @@ func (c *DMCFEClient) SetT(pubT []data.Matrix) error {
 
 // Encrypt encrypts number x under some label.
 func (c *DMCFEClient) Encrypt(x *big.Int, label string) (*bn256.G1, error) {
-	defer gofe.TrackTime(time.Now(), "DMCFE_Encrypt")
 	u := hash([]byte(label))
 	ct, err := u.Dot(c.s)
 	if err != nil {
@@ -123,7 +122,6 @@ func (c *DMCFEClient) Encrypt(x *big.Int, label string) (*bn256.G1, error) {
 
 // GenerateKeyShare generates client's key share. Decryptor needs shares from all clients.
 func (c *DMCFEClient) GenerateKeyShare(y data.Vector) (data.VectorG2, error) {
-	defer gofe.TrackTime(time.Now(), "DMCFE_KeyGen")
 	yReprCap := 0
 	for _, yi := range y {
 		yReprCap += len(yi.Bytes())

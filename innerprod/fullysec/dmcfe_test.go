@@ -17,9 +17,11 @@
 package fullysec_test
 
 import (
+	"fmt"
 	"github.com/fentec-project/gofe"
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/fentec-project/bn256"
 	"github.com/fentec-project/gofe/data"
@@ -37,6 +39,7 @@ func Test_DMCFE(t *testing.T) {
 
 	pubT := make([]data.Matrix, numClients)
 	// create clients and make a slice of their public values
+	start := time.Now()
 	for i := 0; i < numClients; i++ {
 		c, err := fullysec.NewDMCFEClient(i)
 		if err != nil {
@@ -57,6 +60,9 @@ func Test_DMCFE(t *testing.T) {
 	// now that the clients have agreed on secret keys they can encrypt a vector in
 	// a decentralized way and create partial keys such that only with all of them
 	// the decryption of the inner product is possible
+	elapsed := time.Since(start)
+	fmt.Printf("go %s %.6f\n", "DMCFE_Init1", elapsed.Seconds())
+
 	label := "some label"
 	bound := big.NewInt(int64(b))
 	sampler1 := sample.NewUniform(bound)
@@ -76,19 +82,29 @@ func Test_DMCFE(t *testing.T) {
 
 	ciphers := make([]*bn256.G1, numClients)
 	keyShares := make([]data.VectorG2, numClients)
+	start = time.Now()
 	for i := 0; i < numClients; i++ {
 		c, err := clients[i].Encrypt(x[i], label)
 		if err != nil {
 			t.Fatalf("could not encrypt: %v", err)
 		}
 		ciphers[i] = c
+	}
+	elapsed = time.Since(start)
+	fmt.Printf("go %s %.6f\n", "DMCFE_Encrypt", elapsed.Seconds())
 
+	start = time.Now()
+	for i := 0; i < numClients; i++ {
 		keyShare, err := clients[i].GenerateKeyShare(y)
 		if err != nil {
 			t.Fatalf("could not generate key share: %v", err)
 		}
 		keyShares[i] = keyShare
 	}
+
+	elapsed = time.Since(start)
+	fmt.Printf("go %s %.6f\n", "DMCFE_KeyGen", elapsed.Seconds())
+
 
 	bound.Mul(bound, bound)
 	bound.Mul(bound, big.NewInt(int64(numClients))) // numClients * (coordinate_bound)^2
