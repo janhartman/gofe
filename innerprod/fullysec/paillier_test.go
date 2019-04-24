@@ -30,7 +30,8 @@ import (
 func TestFullySec_Paillier(t *testing.T) {
 	bitLength, l, b := gofe.GetParams()
 
-	lambda := bitLength / 4
+	bitLength = 1024
+	lambda := 128
 
 	boundX := big.NewInt(int64(b))
 	boundY := big.NewInt(int64(b))

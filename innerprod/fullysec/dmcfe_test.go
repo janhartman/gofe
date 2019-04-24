@@ -33,7 +33,6 @@ import (
 
 func Test_DMCFE(t *testing.T) {
 	l, b, _ := gofe.GetParams()
-
 	numClients := l
 	clients := make([]*fullysec.DMCFEClient, numClients)
 
@@ -56,13 +55,13 @@ func Test_DMCFE(t *testing.T) {
 			panic(errors.Wrap(err, "could not create private values"))
 		}
 	}
+	elapsed := time.Since(start)
+	fmt.Printf("go %s %.6f\n", "DMCFE_Init1", elapsed.Seconds() / float64(numClients))
+
 
 	// now that the clients have agreed on secret keys they can encrypt a vector in
 	// a decentralized way and create partial keys such that only with all of them
 	// the decryption of the inner product is possible
-	elapsed := time.Since(start)
-	fmt.Printf("go %s %.6f\n", "DMCFE_Init1", elapsed.Seconds())
-
 	label := "some label"
 	bound := big.NewInt(int64(b))
 	sampler1 := sample.NewUniform(bound)
@@ -91,7 +90,7 @@ func Test_DMCFE(t *testing.T) {
 		ciphers[i] = c
 	}
 	elapsed = time.Since(start)
-	fmt.Printf("go %s %.6f\n", "DMCFE_Encrypt", elapsed.Seconds())
+	fmt.Printf("go %s %.6f\n", "DMCFE_Encrypt", elapsed.Seconds() / float64(numClients))
 
 	start = time.Now()
 	for i := 0; i < numClients; i++ {
@@ -101,10 +100,8 @@ func Test_DMCFE(t *testing.T) {
 		}
 		keyShares[i] = keyShare
 	}
-
 	elapsed = time.Since(start)
-	fmt.Printf("go %s %.6f\n", "DMCFE_KeyGen", elapsed.Seconds())
-
+	fmt.Printf("go %s %.6f\n", "DMCFE_KeyGen", elapsed.Seconds() / float64(numClients))
 
 	bound.Mul(bound, bound)
 	bound.Mul(bound, big.NewInt(int64(numClients))) // numClients * (coordinate_bound)^2

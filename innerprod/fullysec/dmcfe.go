@@ -46,7 +46,6 @@ type DMCFEClient struct {
 // y is publicly known vector y = (y_1,...,y_l). Value idx presents index of the party, where
 // it is assumed that if there are n clients, its indexes are in [0, n-1]
 func NewDMCFEClient(idx int) (*DMCFEClient, error) {
-	defer gofe.TrackTime(time.Now(), "DMCFE_Init")
 	sampler := sample.NewUniform(bn256.Order)
 	s, err := data.NewRandomVector(2, sampler)
 	if err != nil {
@@ -170,10 +169,10 @@ type DMCFEDecryptor struct {
 // specifies the bound of vector coordinates.
 func NewDMCFEDecryptor(y data.Vector, label string, ciphers []*bn256.G1, keyShares []data.VectorG2,
 	bound *big.Int) *DMCFEDecryptor {
+	defer gofe.TrackTime(time.Now(), "DMCFE_Init2")
 	key1 := new(bn256.G2).ScalarBaseMult(big.NewInt(0))
 	key2 := new(bn256.G2).ScalarBaseMult(big.NewInt(0))
-	defer gofe.TrackTime(time.Now(), "DMCFE_Init2")
-	for i := 1; i < len(keyShares); i++ {
+	for i := 0; i < len(keyShares); i++ {
 		key1.Add(key1, keyShares[i][0])
 		key2.Add(key2, keyShares[i][1])
 	}

@@ -8,21 +8,21 @@ import (
 )
 
 func GetParams() (int, int, int) {
-
-	if len(os.Args) < 4 {
+	if len(os.Args) < 5 {
 		fmt.Println("No arguments passed")
 		return 0, 0, 0
 	}
 
-	if os.Args[3] == "d" {
-		if len(os.Args) < 6 {
+
+	if os.Args[4] == "d" {
+		if len(os.Args) < 7 {
 			fmt.Println("not enough arguments")
 			return 0, 0, 0
 		}
 
-		n, _ := strconv.Atoi(os.Args[4])
-		l, _ := strconv.Atoi(os.Args[5])
-		b, _ := strconv.Atoi(os.Args[6])
+		n, _ := strconv.Atoi(os.Args[5])
+		l, _ := strconv.Atoi(os.Args[6])
+		b, _ := strconv.Atoi(os.Args[7])
 
 		return n, l, b
 	} else if os.Args[3] == "a" {
