@@ -17,7 +17,6 @@
 package simple
 
 import (
-	"fmt"
 	"math/big"
 	"time"
 
